@@ -1,20 +1,15 @@
-import RPi.GPIO as GPIO
+from gpiozero import PWMOutputDevice
 import time
 import os
 
 def get_cpu_temperature():
     """Read the CPU temperature"""
-    temp = os.popen("vcgencmd measure_temp").readline()
-    return float(temp.replace("temp=", "").replace("'C\n", ""))
+    temp = os.popen("cat /sys/class/thermal/thermal_zone0/temp").readline()
+    return float(temp) / 1000  # Convert from millidegrees to degrees
 
-# Define the GPIO pin connected to the fan
-FAN_PIN = 18  # Change if using a different pin
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(FAN_PIN, GPIO.OUT)
-
-# Set up PWM on the fan pin
-fan_pwm = GPIO.PWM(FAN_PIN, 100)  # 100 Hz frequency
-fan_pwm.start(0)  # Start with the fan off
+# Define the GPIO pin connected to the fan (PWM)
+FAN_PIN = 18  # Change this if using a different pin
+fan = PWMOutputDevice(FAN_PIN)
 
 # Temperature thresholds (adjust as needed)
 TEMP_LOW = 45  # Temperature to start reducing speed
@@ -29,20 +24,19 @@ def control_fan():
             if temp < TEMP_LOW:
                 duty_cycle = 0  # Fan off
             elif temp > TEMP_HIGH:
-                duty_cycle = 100  # Full speed
+                duty_cycle = 1  # Full speed (100%)
             else:
                 # Linear scaling between TEMP_LOW and TEMP_HIGH
-                duty_cycle = (temp - TEMP_LOW) / (TEMP_HIGH - TEMP_LOW) * 100
+                duty_cycle = (temp - TEMP_LOW) / (TEMP_HIGH - TEMP_LOW)
             
-            fan_pwm.ChangeDutyCycle(duty_cycle)
-            print(f"Temp: {temp:.1f}°C | Fan Speed: {duty_cycle:.1f}%")
+            fan.value = duty_cycle  # Set PWM duty cycle
+            print(f"Temp: {temp:.1f}°C | Fan Speed: {duty_cycle * 100:.1f}%")
             
             time.sleep(5)  # Adjust polling interval as needed
     except KeyboardInterrupt:
         print("Fan control stopped")
     finally:
-        fan_pwm.stop()
-        GPIO.cleanup()
+        fan.off()
 
 if __name__ == "__main__":
     control_fan()
