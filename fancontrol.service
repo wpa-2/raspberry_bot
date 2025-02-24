@@ -1,0 +1,15 @@
+[Unit]
+Description=Fan Control Service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/fan.py
+Restart=always
+User=chivalry
+WorkingDirectory=/opt/
+StandardOutput=append:/var/log/fancontrol.log
+StandardError=append:/var/log/fancontrol.log
+
+[Install]
+WantedBy=multi-user.target
