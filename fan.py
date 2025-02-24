@@ -11,9 +11,12 @@ def get_cpu_temperature():
 FAN_PIN = 18  # Change this if using a different pin
 fan = PWMOutputDevice(FAN_PIN)
 
-# Temperature thresholds (adjust as needed)
-TEMP_LOW = 45  # Temperature to start reducing speed
-TEMP_HIGH = 70  # Max speed threshold
+# Adjusted temperature thresholds based on your system
+TEMP_LOW = 50  # Fan starts at 10%
+TEMP_HIGH = 75  # Fan reaches 100%
+
+# Minimum fan speed when running
+MIN_FAN_SPEED = 0.1  # 10%
 
 def control_fan():
     """Adjusts the fan speed based on CPU temperature"""
@@ -26,8 +29,9 @@ def control_fan():
             elif temp > TEMP_HIGH:
                 duty_cycle = 1  # Full speed (100%)
             else:
-                # Linear scaling between TEMP_LOW and TEMP_HIGH
+                # Linear scaling between TEMP_LOW and TEMP_HIGH, with a minimum speed
                 duty_cycle = (temp - TEMP_LOW) / (TEMP_HIGH - TEMP_LOW)
+                duty_cycle = max(duty_cycle, MIN_FAN_SPEED)  # Ensure minimum speed
             
             fan.value = duty_cycle  # Set PWM duty cycle
             print(f"Temp: {temp:.1f}°C | Fan Speed: {duty_cycle * 100:.1f}%")
