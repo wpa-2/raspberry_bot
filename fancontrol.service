@@ -6,10 +6,11 @@ After=multi-user.target
 Type=simple
 ExecStart=/usr/bin/python3 /opt/fan.py
 Restart=always
-User=chivalry
+User=root
 WorkingDirectory=/opt/
 StandardOutput=append:/var/log/fancontrol.log
 StandardError=append:/var/log/fancontrol.log
+Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target
